@@ -3,7 +3,7 @@ import { useState } from 'react';
 import './todo.css';
 import {useDispatch} from 'react-redux';
 import {v4 as uuid} from 'uuid';
-import {AddTodo,DeleteTodo,GetTodo} from '../Redux/Actions';
+import {AddTodo,GetTodo} from '../Redux/Actions';
 import {useSelector} from 'react-redux';
 import axios from 'axios';
 import { useEffect } from 'react';
@@ -38,18 +38,62 @@ function Todo() {
     //fetch data from server
     //I called a request on server for that I used useEffect.
     useEffect(()=>{
-       const getData = () =>{
-           axios.get("https://jsonmockserver.herokuapp.com/todoList").then((data)=>{
-            //    console.log(data.data);
-               const list = data.data;
-
-               dispatch(GetTodo(list))
-           })
-       }
-
        getData();
     },[])
     //next step sent the data to redux storage.
+
+    const getData = () =>{
+        axios.get("https://jsonmockserver.herokuapp.com/todoList").then((data)=>{
+         //    console.log(data.data);
+            const list = data.data;
+
+            dispatch(GetTodo(list))
+        })
+    }
+
+
+    //handle the delete
+    const handleDelete = (id) =>{
+       axios.delete(`https://jsonmockserver.herokuapp.com/todoList/${id}`).then((data)=>{
+           const list = data.data;
+           console.log(list);
+
+        //    dispatch(DeleteTodo(id));
+        //    dispatch(GetTodo(list))
+        getData();
+       })
+    }
+
+
+
+    // //toggle status button
+    const handleStatus = (id) => {
+
+        let targetList = list.filter((item)=>{
+            return item.id === id;
+        })
+        // console.log("HELLO",targetList);
+
+        let statusRes ;
+        // console.log(targetList.status);
+         if(targetList[0].status === true){
+            statusRes = false;
+            // console.log("INSIDE",statusRes);
+         }else{
+             statusRes = true;
+         }
+        
+        // console.log(statusRes === true)
+        // console.log(targetList);
+        // console.log("Res",statusRes);
+        axios.patch(`https://jsonmockserver.herokuapp.com/todoList/${id}`,{status:statusRes}).then((data)=>{
+        
+            // console.log(data.data);
+            getData();
+        })
+
+
+    }
 
   return (
     <div id='container'>
@@ -78,8 +122,8 @@ function Todo() {
                                <tr>
                                    <th>{id+1}</th>
                                    <th>{item.taskName}</th>
-                                   <th><button>{item.status ? "true"  : "false"}</button></th>
-                                   <th><span><button>Edit</button></span><span><button onClick={()=>dispatch(DeleteTodo(item.id))}>Delete</button></span></th>
+                                   <th><button onClick={()=>handleStatus(item.id)}>{item.status ? "true"  : "false"}</button></th>
+                                   <th><span><button>Edit</button></span><span><button onClick={()=>handleDelete(item.id)}>Delete</button></span></th>
                                </tr>
                            )
                        })
